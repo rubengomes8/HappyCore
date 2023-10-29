@@ -1,0 +1,13 @@
+# coverage
+coverage.out
+coverage.txt
+
+# macbook
+*.DS_Store
+
+# vendor
+*vendor/
+
+# vscode
+*.vscode
+**__debug_bin
