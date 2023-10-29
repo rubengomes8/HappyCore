@@ -25,7 +25,7 @@ func NewTokenHandler(
 	}
 }
 
-func (t TokenHandler) generateToken(sub uint) (string, error) {
+func (t TokenHandler) GenerateToken(sub uint) (string, error) {
 
 	if t.apiSecret == "" {
 		return "", ErrAPISecretRequired
