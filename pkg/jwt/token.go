@@ -43,18 +43,60 @@ func (s TokenService) GenerateToken(sub uint) (string, error) {
 }
 
 func (s TokenService) ValidateToken(ctx *gin.Context) error {
-	bearerToken := ctx.Request.Header.Get("Authorization")
-	if len(strings.Split(bearerToken, " ")) != 2 {
+
+	tokenString, err := getBearerToken(ctx)
+	if err != nil {
 		return errors.New("invalid authentication")
 	}
-	tokenString := strings.Split(bearerToken, " ")[1]
 
-	_, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(s.apiSecret), nil
 	})
 
+	if !token.Valid {
+		return errors.New("invalid token")
+	}
+
 	return err
+}
+
+func (s TokenService) ExtractClaimSub(ctx *gin.Context) (int, error) {
+
+	tokenString, err := getBearerToken(ctx)
+	if err != nil {
+		return 0, errors.New("invalid authentication")
+	}
+
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(s.apiSecret), nil
+	})
+	if err != nil {
+		return 0, err
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		return 0, errors.New("invalid token")
+	}
+
+	sub, ok := claims["sub"].(int)
+	if !ok {
+		return 0, errors.New("invalid claim sub")
+	}
+
+	return sub, nil
+}
+
+func getBearerToken(ctx *gin.Context) (string, error) {
+	bearerToken := ctx.Request.Header.Get("Authorization")
+	if len(strings.Split(bearerToken, " ")) != 2 {
+		return "", errors.New("invalid authentication")
+	}
+	return strings.Split(bearerToken, " ")[1], nil
 }
