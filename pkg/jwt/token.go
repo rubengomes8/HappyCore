@@ -85,12 +85,12 @@ func (s TokenService) ExtractClaimSub(ctx *gin.Context) (int, error) {
 		return 0, errors.New("invalid token")
 	}
 
-	sub, ok := claims["sub"].(int)
+	sub, ok := claims["sub"].(float64)
 	if !ok {
 		return 0, errors.New("invalid claim sub")
 	}
 
-	return sub, nil
+	return int(sub), nil
 }
 
 func getBearerToken(ctx *gin.Context) (string, error) {
