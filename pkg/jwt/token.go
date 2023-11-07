@@ -37,7 +37,10 @@ func (s TokenService) GenerateToken(sub uint) (string, error) {
 
 	claims := jwt.MapClaims{}
 	claims["sub"] = sub
-	claims["exp"] = time.Now().UTC().Add(time.Hour * time.Duration(s.tokenLifespanHours)).Unix()
+
+	if s.tokenLifespanHours != 0 {
+		claims["exp"] = time.Now().UTC().Add(time.Hour * time.Duration(s.tokenLifespanHours)).Unix()
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(s.apiSecret))
 }
